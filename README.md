@@ -1,6 +1,7 @@
-[![GoDoc](https://godoc.org/github.com/ngrok/sqlmw?status.svg)](https://godoc.org/github.com/ngrok/sqlmw)
+[![docs](https://pkg.go.dev/badge/github.com/ngrok/sqlmw?status.svg)](https://pkg.go.dev/github.com/ngrok/sqlmw)
 
 # sqlmw
+
 sqlmw provides an absurdly simple API that allows a caller to wrap a `database/sql` driver
 with middleware.
 
