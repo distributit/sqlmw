@@ -89,7 +89,7 @@ func (s wrappedParentStmt) QueryContext(ctx context.Context, args []driver.Named
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
-	return s.Stmt.Query(dargs)
+	return s.Query(dargs)
 }
 
 func (s wrappedParentStmt) ExecContext(ctx context.Context, args []driver.NamedValue) (res driver.Result, err error) {
@@ -106,5 +106,5 @@ func (s wrappedParentStmt) ExecContext(ctx context.Context, args []driver.NamedV
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
-	return s.Stmt.Exec(dargs)
+	return s.Exec(dargs)
 }

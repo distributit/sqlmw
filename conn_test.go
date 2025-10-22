@@ -124,7 +124,7 @@ func TestConnQueryContext_PassWrappedRowContext(t *testing.T) {
 	}
 
 	rows.Next()
-	rows.Close()
+	_ = rows.Close()
 
 	if !ti.RowsCloseValid {
 		t.Error("RowsClose context not valid")
@@ -169,7 +169,7 @@ func TestConnPrepareContext_PassWrappedStmtContext(t *testing.T) {
 		t.Fatalf("Prepare failed: %s", err)
 	}
 
-	stmt.Close()
+	_ = stmt.Close()
 
 	if !ti.StmtCloseValid {
 		t.Error("StmtClose context not valid")

@@ -1,3 +1,7 @@
-issues:
-  exclude:
-    - "SA1019: .* has been deprecated since Go 1.*: Drivers should implement .*"
+version: 2
+linters:
+  exclusions:
+    rules:
+      - linters:
+          - staticcheck
+        text: "SA1019: .* has been deprecated since Go 1.*: Drivers should implement .*" # TODO: upgrade Go version, and drop these functions?
