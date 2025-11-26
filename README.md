@@ -1,4 +1,4 @@
-[![docs](https://pkg.go.dev/badge/github.com/ngrok/sqlmw?status.svg)](https://pkg.go.dev/github.com/ngrok/sqlmw)
+[![docs](https://pkg.go.dev/badge/github.com/distributit/sqlmw?status.svg)](https://pkg.go.dev/github.com/distributit/sqlmw)
 
 # sqlmw
 
@@ -40,7 +40,7 @@ func (in *sqlInterceptor) StmtQueryContext(ctx context.Context, conn driver.Stmt
 }
 ```
 
-You may override any subset of methods to intercept in the `Interceptor` interface (https://godoc.org/github.com/ngrok/sqlmw#Interceptor):
+You may override any subset of methods to intercept in the `Interceptor` interface (https://godoc.org/github.com/distributit/sqlmw#Interceptor):
 
 ```go
 type Interceptor interface {
@@ -152,8 +152,8 @@ the power to implement advanced behaviors like caching, sharding, retries, etc.
 
 ## Go version support
 
-Go versions 1.9 and forward are supported.
+Go versions 1.24 and forward are supported.
 
 ## Fork
 
-This project began by forking the code in github.com/luna-duclos/instrumentedsql, which itself is a fork of github.com/ExpansiveWorlds/instrumentedsql
+This project began by forking the code in https://github.com/ngrok/sqlmw, which itself is a fork of github.com/luna-duclos/instrumentedsql, which itself is a fork of github.com/ExpansiveWorlds/instrumentedsql.
