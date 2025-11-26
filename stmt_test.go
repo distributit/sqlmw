@@ -89,8 +89,8 @@ func TestStmtQueryContext_PassWrappedRowContext(t *testing.T) {
 	}
 
 	rows.Next()
-	rows.Close()
-	stmt.Close()
+	_ = rows.Close()
+	_ = stmt.Close()
 
 	if !ti.RowsNextValid {
 		t.Error("RowsNext context not valid")

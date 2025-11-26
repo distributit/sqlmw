@@ -129,7 +129,7 @@ func (c wrappedParentConn) BeginTx(ctx context.Context, opts driver.TxOptions) (
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	default:
-		return c.Conn.Begin()
+		return c.Begin()
 	}
 }
 
@@ -142,7 +142,7 @@ func (c wrappedParentConn) PrepareContext(ctx context.Context, query string) (dr
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	default:
-		return c.Conn.Prepare(query)
+		return c.Prepare(query)
 	}
 }
 
