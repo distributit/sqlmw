@@ -194,6 +194,7 @@ type fakeConn struct {
 	called          bool // nolint:structcheck // ignore unused warning, it is accessed via reflection
 	rowsCloseCalled bool
 	stmt            driver.Stmt
+	queryStmt       driver.StmtQueryContext
 	tx              driver.Tx
 }
 
@@ -221,17 +222,12 @@ func (c *fakeConn) Close() error { return nil }
 
 func (c *fakeConn) Begin() (driver.Tx, error) { return c.tx, nil }
 
-func (c *fakeConn) QueryContext(_ context.Context, _ string, nvs []driver.NamedValue) (driver.Rows, error) {
-	if c.stmt == nil {
+func (c *fakeConn) QueryContext(ctx context.Context, _ string, nvs []driver.NamedValue) (driver.Rows, error) {
+	if c.queryStmt == nil {
 		return &fakeRows{con: c}, nil
 	}
 
-	var args []driver.Value
-	for _, nv := range nvs {
-		args = append(args, nv.Value)
-	}
-
-	return c.stmt.Query(args)
+	return c.queryStmt.QueryContext(ctx, nvs)
 }
 
 func (c *fakeConnWithCheckNamedValue) CheckNamedValue(_ *driver.NamedValue) (err error) {

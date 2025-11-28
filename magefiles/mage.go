@@ -14,3 +14,9 @@ func Lint(ctx context.Context) error {
 	args := []string{"run", "--config", ".golangci.yml"}
 	return sh.RunV("golangci-lint", args...)
 }
+
+// Test runs the tests
+func Test(ctx context.Context) error {
+	args := []string{"test", "-v", "-race", "./..."}
+	return sh.RunV("go", args...)
+}
