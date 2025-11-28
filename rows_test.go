@@ -109,7 +109,7 @@ func TestRowsNext(t *testing.T) {
 	stmt := fakeStmt{
 		rows: rows,
 	}
-	con.stmt = stmt
+	con.queryStmt = stmt
 	driverName := driverName(t)
 	interceptor := rowsNextInterceptor{}
 
@@ -199,7 +199,7 @@ func TestRows_LikePGX(t *testing.T) {
 	stmt := fakeStmt{
 		rows: rows,
 	}
-	con.stmt = stmt
+	con.queryStmt = stmt
 	driverName := driverName(t)
 	interceptor := rowsNextInterceptor{}
 
