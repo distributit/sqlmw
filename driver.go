@@ -14,10 +14,6 @@ var (
 	_ driver.DriverContext = wrappedDriver{}
 )
 
-// WrapDriver will wrap the passed SQL driver and return a new sql driver that uses it and also logs and traces calls using the passed logger and tracer
-// The returned driver will still have to be registered with the sql package before it can be used.
-//
-
 // Driver returns the supplied driver.Driver with a new object that has all of its calls intercepted by the supplied
 // Interceptor object.
 //
