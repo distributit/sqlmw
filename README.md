@@ -32,11 +32,11 @@ type sqlInterceptor struct {
         sqlmw.NullInterceptor
 }
 
-func (in *sqlInterceptor) StmtQueryContext(ctx context.Context, conn driver.StmtQueryContext, query string, args []driver.NamedValue) (driver.Rows, error) {
+func (in *sqlInterceptor) StmtQueryContext(ctx context.Context, conn driver.StmtQueryContext, query string, args []driver.NamedValue) (context.Context, driver.Rows, error) {
         startedAt := time.Now()
         rows, err := conn.QueryContext(ctx, args)
         log.Debug("executed sql query", "duration", time.Since(startedAt), "query", query, "args", args, "err", err)
-        return rows, err
+        return ctx, rows, err
 }
 ```
 
@@ -45,11 +45,11 @@ You may override any subset of methods to intercept in the `Interceptor` interfa
 ```go
 type Interceptor interface {
     // Connection interceptors
-    ConnBeginTx(context.Context, driver.ConnBeginTx, driver.TxOptions) (driver.Tx, error)
-    ConnPrepareContext(context.Context, driver.ConnPrepareContext, string) (driver.Stmt, error)
+    ConnBeginTx(context.Context, driver.ConnBeginTx, driver.TxOptions) (context.Context, driver.Tx, error)
+    ConnPrepareContext(context.Context, driver.ConnPrepareContext, string) (context.Context, driver.Stmt, error)
     ConnPing(context.Context, driver.Pinger) error
     ConnExecContext(context.Context, driver.ExecerContext, string, []driver.NamedValue) (driver.Result, error)
-    ConnQueryContext(context.Context, driver.QueryerContext, string, []driver.NamedValue) (driver.Rows, error)
+    ConnQueryContext(context.Context, driver.QueryerContext, string, []driver.NamedValue) (context.Context, driver.Rows, error)
 
     // Connector interceptors
     ConnectorConnect(context.Context, driver.Connector) (driver.Conn, error)
@@ -60,10 +60,11 @@ type Interceptor interface {
 
     // Rows interceptors
     RowsNext(context.Context, driver.Rows, []driver.Value) error
+    RowsClose(context.Context, driver.Rows) error
 
     // Stmt interceptors
     StmtExecContext(context.Context, driver.StmtExecContext, string, []driver.NamedValue) (driver.Result, error)
-    StmtQueryContext(context.Context, driver.StmtQueryContext, string, []driver.NamedValue) (driver.Rows, error)
+    StmtQueryContext(context.Context, driver.StmtQueryContext, string, []driver.NamedValue) (context.Context, driver.Rows, error)
     StmtClose(context.Context, driver.Stmt) error
 
     // Tx interceptors
@@ -71,6 +72,12 @@ type Interceptor interface {
     TxRollback(context.Context, driver.Tx) error
 }
 ```
+
+The `ConnBeginTx`, `ConnPrepareContext`, `ConnQueryContext` and `StmtQueryContext` methods
+return a `context.Context` alongside their wrapped result. The returned context is carried
+forward into subsequent interceptor calls on the resulting object (for example, a context
+set in `StmtQueryContext` flows into the following `RowsNext` and `RowsClose` calls), which
+lets an interceptor thread trace/span state across a call sequence.
 
 Bear in mind that because you are intercepting the calls entirely, that you are responsible for passing control up to the wrapped
 driver in any function that you override, like so:
@@ -86,18 +93,18 @@ func (in *sqlInterceptor) ConnPing(ctx context.Context, conn driver.Pinger) erro
 ### Logging
 
 ```go
-func (in *sqlInterceptor) StmtQueryContext(ctx context.Context, conn driver.StmtQueryContext, query string, args []driver.NamedValue) (driver.Rows, error) {
+func (in *sqlInterceptor) StmtQueryContext(ctx context.Context, conn driver.StmtQueryContext, query string, args []driver.NamedValue) (context.Context, driver.Rows, error) {
     startedAt := time.Now()
     rows, err := conn.QueryContext(ctx, args)
     log.Debug("executed sql query", "duration", time.Since(startedAt), "query", query, "args", args, "err", err)
-    return rows, err
+    return ctx, rows, err
 }
 ```
 
 ### Tracing
 
 ```go
-func (in *sqlInterceptor) StmtQueryContext(ctx context.Context, conn driver.StmtQueryContext, query string, args []driver.NamedValue) (driver.Rows, error) {
+func (in *sqlInterceptor) StmtQueryContext(ctx context.Context, conn driver.StmtQueryContext, query string, args []driver.NamedValue) (context.Context, driver.Rows, error) {
     span := trace.FromContext(ctx).NewSpan(ctx, "StmtQueryContext")
     span.Tags["query"] = query
     defer span.Finish()
@@ -105,25 +112,25 @@ func (in *sqlInterceptor) StmtQueryContext(ctx context.Context, conn driver.Stmt
     if err != nil {
             span.Error(err)
     }
-    return rows, err
+    return ctx, rows, err
 }
 ```
 
 ### Retries
 
 ```go
-func (in *sqlInterceptor) StmtQueryContext(ctx context.Context, conn driver.StmtQueryContext, query string, args []driver.NamedValue) (driver.Rows, error) {
+func (in *sqlInterceptor) StmtQueryContext(ctx context.Context, conn driver.StmtQueryContext, query string, args []driver.NamedValue) (context.Context, driver.Rows, error) {
     for {
             rows, err := conn.QueryContext(ctx, args)
             if err == nil {
-                    return rows, nil
+                    return ctx, rows, nil
             }
             if err != nil && !isIdempotent(query) {
-                    return nil, err
+                    return ctx, nil, err
             }
             select {
             case <-ctx.Done():
-                    return nil, ctx.Err()
+                    return ctx, nil, ctx.Err()
             case <-time.After(time.Second):
             }
     }
